@@ -88,7 +88,7 @@ VERIFY=0
 VERBOSE=0
 DEBUG=0
 FROM_CRON=0
-METRIC=0
+METRIC=""
 PROFILE=""
 LOAD_AVE1=0
 LOAD_AVE5=0
@@ -557,7 +557,7 @@ if [ $DISK_SPACE_UTIL -eq 1 -a -n "$DISK_PATH" -a $disk_total -gt 0 ]; then
         echo "disk_util:$disk_util"
     fi
     if [ $VERIFY -eq 0 ]; then
-        if [ $METRIC -eq 0 ]; then
+        if [ -z "$METRIC" ]; then
             metricName="DiskSpaceUtilization"
         else
             metricName="$METRIC"
