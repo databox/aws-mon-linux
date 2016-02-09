@@ -47,6 +47,7 @@ usage()
     printf "    %-28s %s\n" "--verbose" "Displays details of what the script is doing."
     printf "    %-28s %s\n" "--debug" "Displays information for debugging."
     printf "    %-28s %s\n" "--from-cron" "Use this option when calling the script from cron."
+    printf "    %-28s %s\n" "--metric VALUE" "Use this option to override default metric name."
     printf "    %-28s %s\n" "--profile VALUE" "Use a specific profile from your credential file."
     printf "    %-28s %s\n" "--load-ave1" "Reports load average for 1 minute in counts."
     printf "    %-28s %s\n" "--load-ave5" "Reports load average for 5 minutes in counts."
@@ -79,7 +80,7 @@ usage()
 # Options
 ########################################
 SHORT_OPTS="h"
-LONG_OPTS="help,version,verify,verbose,debug,from-cron,profile:,load-ave1,load-ave5,load-ave15,interrupt,context-switch,cpu-us,cpu-sy,cpu-id,cpu-wa,cpu-st,memory-units:,mem-used-incl-cache-buff,mem-util,mem-used,mem-avail,swap-util,swap-used,swap-avail,disk-path:,disk-space-units:,disk-space-util,disk-space-used,disk-space-avail,all-items" 
+LONG_OPTS="help,version,verify,verbose,debug,from-cron,metric:,profile:,load-ave1,load-ave5,load-ave15,interrupt,context-switch,cpu-us,cpu-sy,cpu-id,cpu-wa,cpu-st,memory-units:,mem-used-incl-cache-buff,mem-util,mem-used,mem-avail,swap-util,swap-used,swap-avail,disk-path:,disk-space-units:,disk-space-util,disk-space-used,disk-space-avail,all-items" 
 
 ARGS=$(getopt -s bash --options $SHORT_OPTS --longoptions $LONG_OPTS --name $SCRIPT_NAME -- "$@" ) 
 
@@ -87,6 +88,7 @@ VERIFY=0
 VERBOSE=0
 DEBUG=0
 FROM_CRON=0
+METRIC=0
 PROFILE=""
 LOAD_AVE1=0
 LOAD_AVE5=0
@@ -141,6 +143,11 @@ while true; do
         --profile)
             shift
             PROFILE=$1
+            ;;
+        # Metric name
+        --metric)
+            shift
+            METRIC=$1
             ;;
         # System
         --load-ave1)
@@ -550,7 +557,12 @@ if [ $DISK_SPACE_UTIL -eq 1 -a -n "$DISK_PATH" -a $disk_total -gt 0 ]; then
         echo "disk_util:$disk_util"
     fi
     if [ $VERIFY -eq 0 ]; then
-        aws cloudwatch put-metric-data --metric-name "DiskSpaceUtilization" --value "$disk_util" --unit "Percent" $CLOUDWATCH_OPTS
+        if [ $METRIC -eq 0 ]; then
+            metricName="DiskSpaceUtilization"
+        else
+            metricName="$METRIC"
+        fi
+        aws cloudwatch put-metric-data --metric-name "$metricName" --value "$disk_util" --unit "Percent" $CLOUDWATCH_OPTS
     fi
 fi
 
